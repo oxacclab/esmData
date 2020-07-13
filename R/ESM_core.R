@@ -1,9 +1,9 @@
 # Load and prepare data ---------------------------------------------------
 
+#' Fetch experiment JSON files from a folder
+#' @param folderName path to folder to process
+#' @return list of tables of data extracted from JSONs
 loadFilesFromFolder <- function(folderName) {
-  require(jsonlite)
-  require(tibble)
-  require(dplyr)
 
   files <- list.files(folderName)
   participants <- NULL
@@ -27,13 +27,13 @@ loadFilesFromFolder <- function(folderName) {
   for (i in seq(length(files))) {
     fileName <- paste(folderName, files[[i]], sep = '/')
     json <- readChar(fileName, file.info(fileName)$size)
-    jsonData <- fromJSON(json, simplifyVector = T, simplifyMatrix = T, simplifyDataFrame = T)
+    jsonData <- jsonlite::fromJSON(json, simplifyVector = T, simplifyMatrix = T, simplifyDataFrame = T)
 
     # store all columns in participants table except the special cases
     # (trials, advisors, and questionnaires (including GTQ) are stored separately)
-    p <- as_tibble(t(jsonData[!names(jsonData) %in% tblNames]))
-    p <- mutate_all(p, parseLists)
-    participants <- bind_rows(participants, p)
+    p <- tibble::as_tibble(t(jsonData[!names(jsonData) %in% tblNames]))
+    p <- dplyr::mutate_all(p, parseLists)
+    participants <- dplyr::bind_rows(participants, p)
 
     # store the trials in the trials table
     trials <- rbind(trials, jsonData$trials)
@@ -83,6 +83,8 @@ trialUtilityVariables <- function(results) {
   trialTypes <- list(catch = 0, force = 1, choice = 2, dual = 3, change = 4)
 
   # unpack results
+  trials <- results$trials      # this explicit import suppresses build warnings
+  advisors <- results$advisors  # this explicit import suppresses build warnings
   for (i in 1:length(results))
     assign(names(results)[i], results[i][[1]])
 
@@ -203,7 +205,7 @@ getConfidenceShift <- function (t, rawShift = FALSE, forceRecalculate = FALSE) {
 
 #' Return a property of an Advisor from their ID for a given participant.
 #' @param property to return. Should be a column in advisors
-#' @param advisorId
+#' @param advisorId id of the advisor
 #' @param participantId will be joined to advisorId as a data.frame, so must be of the same length
 #' @param advisors data frame of advisors
 #' @return property of specified advisor
@@ -224,7 +226,7 @@ getConfidenceShift <- function (t, rawShift = FALSE, forceRecalculate = FALSE) {
 }
 
 #' Return an Advisor's adviceType from their ID for a given participant. Updated version of getAdviceType
-#' @param advisorId
+#' @param advisorId id of the advisor
 #' @param participantId will be joined to advisorId as a data.frame, so must be of the same length
 #' @param advisors data frame of advisors
 #' @return adviceType of specified advisor
@@ -233,7 +235,7 @@ findAdviceType <- function(advisorId, participantId, advisors) {
 }
 
 #' Return an Advisor's groupId from their ID for a given participant. Updated version of getAdviceType
-#' @param advisorId
+#' @param advisorId id of the advisor
 #' @param participantId will be joined to advisorId as a data.frame, so must be of the same length
 #' @param advisors data frame of advisors
 #' @return adviceType of specified advisor
@@ -243,8 +245,7 @@ findAdvisorGroup <- function(advisorId, participantId, advisors) {
 
 #' Return a vector of influences of advisors. Influence is +confidenceShift
 #' where the advisor agrees, and -confidenceShift where the advisor disagrees.
-#' @param advisorIds
-#' @param advisorAgreements
+#' @param advisorAgreements logical vector of whether the advisor agreed with the participant
 #' @param confidenceShifts the parameters are all bound together into a
 #'   dataframe so must all be the same length
 #' @return vector of influences of the advisors. NA where advisorId is NA

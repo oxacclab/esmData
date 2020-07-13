@@ -9,3 +9,14 @@ Description: Provides data collected during Matt Jaquiery's DPhil project
 License: CC-BY
 Encoding: UTF-8
 LazyData: true
+Imports: 
+  jsonlite,
+  tibble,
+  dplyr,
+  curl,
+  purrr,
+  stringr,
+  sjlabelled,
+  tidyselect,
+  rlang
+RoxygenNote: 7.1.1

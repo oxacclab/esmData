@@ -1,10 +1,23 @@
+requireNamespace("curl")
+requireNamespace("jsonlite")
+requireNamespace("utils")
+library(rlang)
+library(tibble)
+library(stringr)
+library(dplyr)
+
 # Fetch data from the acclab.psy.ox.ac.uk server
 
 # List server files -------------------------------------------------------
 
+#' Fetch raw data from the project server
+#' @importFrom curl curl
+#' @importFrom tibble as_tibble
+#' @importFrom purrr set_names
+#' @importFrom dplyr %>%
+#' @importFrom stringr str_match str_extract
 fetchRawData <- function() {
-  require(curl)
-  require(tidyverse)
+  library(curl)
 
   rDir <- "https://acclab.psy.ox.ac.uk/~mj221/ESM/data/public/"
 
@@ -32,15 +45,16 @@ fetchRawData <- function() {
 
   # Fetch server .csv files -------------------------------------------------
 
-  #' Return a tibble of data in a .csv file
   #' @param fileDetails tbl row describing the file with $url, $study, $version, $table
-  #' @return tibble of parsed data with
+  #' @importFrom curl curl
+  #' @importFrom tibble as_tibble
+  #' @importFrom dplyr %>% mutate_if filter bind_rows bind_cols
+  #' @importFrom stringr str_extract str_detect
+  #' @importFrom parallel makeCluster detectCores clusterExport parApply stopCluster
+  #' @importFrom utils read.csv
+  #' @importFrom rlang .data
+  #' @return tibble of parsed data
   fetchData <- function(fileDetails) {
-    require(curl)
-    require(magrittr)
-    require(tibble)
-    require(stringr)
-    require(dplyr)
 
     if (!all(c('url', 'table') %in% names(fileDetails)))
       stop('fileDetails variable missing required field. (Required fields = url, table.)')
@@ -48,7 +62,6 @@ fetchRawData <- function() {
     csv <- read.csv(fileDetails['url']) %>% as_tibble()
 
     if (str_detect(fileDetails['table'], 'Trial')) {
-      require(jsonlite)
       if (!all(c('study', 'version') %in% names(fileDetails)))
         stop('fileDetails variable missing required field for raw data patching. (Required fields = url, table, study, version.)')
       # Patch resulting tibble with raw json data
@@ -78,10 +91,10 @@ fetchRawData <- function() {
         json <- jsonlite::fromJSON(txt)
         tmp <- json$trials %>% as_tibble()
         if ('blockType' %in% names(tmp))
-          tmp <- tmp %>% filter(blockType == "core")
+          tmp <- tmp %>% filter(.data$blockType == "core")
         tmp <- tmp$data %>%
           as_tibble() %>%
-          filter(isAttentionCheck %in% attn) %>%
+          filter(.data$isAttentionCheck %in% attn) %>%
           mutate_if(is.factor, as.character)
         tmp$pid <- json$id
         d <- bind_rows(d, tmp)
@@ -108,7 +121,7 @@ fetchRawData <- function() {
   x <- files %>% filter(str_detect(table, 'Trial'))
   y <- files %>% filter(!str_detect(table, 'Trial'))
 
-  library(parallel)
+  requireNamespace("parallel")
   cl <- makeCluster(detectCores() - 4)
   clusterExport(cl, 'fetchData')
   x$data <- parApply(cl, x, 1, fetchData)
@@ -121,16 +134,14 @@ fetchRawData <- function() {
 
 #' Export basic data
 exportRawData <- function(files, name = 'datequiz.raw') {
-  require(stringr)
-  path <- paste0('extdata/', str_replace(name, '\\.', '-'), '.Rdata')
+  path <- paste0('extdata/', name, '.Rdata')
   assign(name, files)
   save(list = c(name), file = path)
 }
 
 #' Export data complete with tags and labels
 exportFullData <- function(files, name = 'datequiz.full') {
-  require(stringr)
-  path <- paste0('data/', str_replace(name, '\\.', '-'), '.Rdata')
+  path <- paste0('data/', name, '.Rdata')
   print(paste0('Export data to ', path, '.'))
   print('1. Tag data')
   files <- tagData(files)
@@ -143,14 +154,14 @@ exportFullData <- function(files, name = 'datequiz.full') {
 
 #' Add information about studies to the raw data table
 #' @param files raw data table
+#' @importFrom dplyr %>% case_when mutate
+#' @importFrom purrr map_dbl
+#' @importFrom rlang .data
 #' @return files with metadata added
 tagData <- function(files) {
-  require(dplyr)
-  require(purrr)
-  require(stringr)
   files %>%
     mutate(
-      N = map_dbl(data, ~ length(unique(.$pid))),
+      N = map_dbl(.data$data, ~ length(unique(.$pid))),
       description = case_when(
         study == "accuracyDates"  & version == "v0-0-1" ~
           "Binary dates task with high and low accuracy advisors with agreement rates targeted to be roughly similar. This version contained a bug in which feedback was always disabled regardless of experimental condition, and were thus unsuitable for testing the key hypotheses for which the data were collected.",
@@ -391,8 +402,12 @@ tagData <- function(files) {
     )
 }
 
+#' Fetch dictionary files from the local webserver
+#' @importFrom dplyr mutate %>% select
+#' @importFrom purrr map
+#' @importFrom rlang .data
+#' @return list of dictionaries in JSON format
 getDictionaries.dates <- function() {
-  require(jsonlite)
   dicts <- tibble(name = c(
     'AdvisedTrial',
     'AdvisedTrialWithConf',
@@ -408,20 +423,23 @@ getDictionaries.dates <- function() {
     ))
   dicts %>%
     mutate(
-      url = paste0('http://localhost/ExploringSocialMetacognition/data/public/dictionary_', name, '.csv'),
+      url = paste0('http://localhost/ExploringSocialMetacognition/data/public/dictionary_', .data$name, '.csv'),
       csv = map(
         url,
         ~ read.csv(., header = F) %>%
           as_tibble()
       ),
-      json = map(csv, dictToJSON)
-    ) %>% select(name, json)
+      json = map(.data$csv, dictToJSON)
+    ) %>% select(.data$name, .data$json)
 }
 
 #' Convert a dictionary CSV file into a metadata JSON file
+#' @param dict dictionary.csv to convert
+#' @importFrom dplyr mutate %>% select
+#' @importFrom tibble has_name
+#' @importFrom rlang .data
+#' @importFrom jsonlite toJSON
 dictToJSON <- function(dict) {
-  require(jsonlite)
-  require(dplyr)
   # Correct names if they're missing
   if (is.null(colnames(dict)) | has_name(dict, 'V1')) {
     if (ncol(dict) == 2)
@@ -432,7 +450,9 @@ dictToJSON <- function(dict) {
       stop(paste0('Expected dictionary to have 2 or 3 columns, not ', ncol(dict), '.'))
   }
   if (!has_name(dict, 'value'))
-    dict <- dict %>% mutate(value = '*') %>% select(name, value, description)
+    dict <- dict %>%
+      mutate(value = '*') %>%
+      select(.data$name, .data$value, .data$description)
 
   toJSON(dict)
 }
@@ -440,6 +460,8 @@ dictToJSON <- function(dict) {
 #' Save local copy of dictionaries
 #' @param dicts tbl of dictionaries with columns name and json
 #' @param prefix string to include before the dictionary name
+#' @importFrom jsonlite fromJSON
+#' @importFrom utils write.csv
 #' @return NULL (invisible)
 saveLocalDictionaries <- function(dicts, prefix = '') {
   if (prefix != '')
@@ -450,26 +472,35 @@ saveLocalDictionaries <- function(dicts, prefix = '') {
     function(x)
       write.csv(
         fromJSON(x$json),
-        paste0('extdata/dictionary_', prefix, x$name, '.csv'),
+        paste0('inst/extdata/dictionary_', prefix, x$name, '.csv'),
         row.names = F)
   )
   invisible(NULL)
 }
 
 #' Add the labels to files' data fields from the associated dictionary files
+#' @param files list of files to add labels to
+#' @param dictionaryPrefix prefix to ensure the correct dictionary is found
+#' @return files with labels added
 addLabels <- function(files, dictionaryPrefix = '') {
-  require(stringr)
+  requireNamespace("sjlabelled")
+  requireNamespace("rlang")
+  #' @importFrom stringr str_match str_replace_all
+  #' @importFrom dplyr mutate %>%
+  #' @importFrom rlang .data
   .getLabel <- function(dict, v) {
-    require(tidyselect)
-    require(dplyr)
     # Advisor variables are tagged with advisor number
     m <- str_match(v, 'advisor([0-9])+')
     if (!is.na(m[, 1])) {
       n <- m[, 2]
       dict <- dict %>%
         mutate(
-          name = str_replace_all(name, 'advisor\\[0-9\\]\\+', paste0('advisor', n)),
-          description = str_replace_all(description, 'advisor( ?)\\[0-9\\]\\+', paste0('advisor\\1', n))
+          name = str_replace_all(.data$name,
+                                 'advisor\\[0-9\\]\\+',
+                                 paste0('advisor', n)),
+          description = str_replace_all(.data$description,
+                                        'advisor( ?)\\[0-9\\]\\+',
+                                        paste0('advisor\\1', n))
           )
     }
     if (v %in% dict$name)
@@ -477,12 +508,13 @@ addLabels <- function(files, dictionaryPrefix = '') {
     else
       NULL
   }
+  #' @importFrom sjlabelled set_label
+  #' @importFrom stringr str_detect
+  #' @importFrom utils read.csv
   .addLabels <- function(f) {
-    require(sjlabelled)
-    require(rlang)
     if (dictionaryPrefix != '' & !str_detect(dictionaryPrefix, '-$'))
       dictionaryPrefix <- paste0(dictionaryPrefix, '-')
-    dictPath <- paste0('extdata/dictionary_', dictionaryPrefix, f$table, '.csv')
+    dictPath <- paste0('inst/extdata/dictionary_', dictionaryPrefix, f$table, '.csv')
     if (!file.exists(dictPath)) {
       warning(paste0('No dictionary file found for ', f$table, ', missing ', dictPath, '.'))
       return(f$data)
@@ -502,5 +534,5 @@ addLabels <- function(files, dictionaryPrefix = '') {
   files
 }
 
-load('extdata/datequiz-raw.Rdata')
-load('data/datequiz-full.Rdata')
+load('inst/extdata/datequiz.raw.Rdata')
+load('data/datequiz.full.Rdata')

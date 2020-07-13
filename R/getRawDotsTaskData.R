@@ -1,12 +1,21 @@
+requireNamespace("jsonlite")
+library(tibble)
+library(stringr)
+library(purrr)
+library(dplyr)
+library(rlang)
+
 # Fetch data from the local filesystem
 
 # List server files -------------------------------------------------------
 
+#' Fetch dots raw data from filesystem
+#' @importFrom dplyr mutate %>% filter select if_else
+#' @importFrom purrr map_dbl
+#' @importFrom rlang .data
+#' @importFrom stringr str_match str_remove
 fetchRawData.dots <- function() {
   source('R/ESM_core.R')
-  require(purrr)
-  require(dplyr)
-  require(tibble)
 
   path <- "G:/Documents/University/Google Drive/Project Documents/AdvisorChoice/results"
   folders <- list.dirs(path, recursive = T)
@@ -32,7 +41,10 @@ fetchRawData.dots <- function() {
     )
 
     # drop empty
-    df <- df %>% mutate(n = map_dbl(data, length)) %>% filter(n > 0) %>% select(-n)
+    df <- df %>%
+      mutate(n = map_dbl(.data$data, length)) %>%
+      filter(.data$n > 0) %>%
+      select(-.data$n)
 
     tmp <- rbind(tmp, df)
   }
@@ -42,7 +54,7 @@ fetchRawData.dots <- function() {
     mutate(
       study = str_match(folderName, '/AdvisorChoice/results/([^/]+)/')[, 2],
       version = str_match(folderName, '/AdvisorChoice/results/[^/]+/([^/]+)')[, 2],
-      version = if_else(version %in% c('processed', 'raw'), study, version),
+      version = if_else(version %in% c('processed', 'raw'), .data$study, .data$version),
       date = str_match(version, '^([0-9]{4}-[0-9]{2}-[0-9]{2})'),
       date = if_else(is.na(date[, 1]), NA_character_, date[, 2]),
       version = str_remove(version, '^[0-9]{4}-[0-9]{2}-[0-9]{2}\\s*')
@@ -52,15 +64,13 @@ fetchRawData.dots <- function() {
 }
 
 exportRawData.dots <- function(files, name = 'dotstask.raw') {
-  require(stringr)
-  path <- paste0('extdata/', str_replace(name, '\\.', '-'), '.Rdata')
+  path <- paste0('inst/extdata/', name, '.Rdata')
   assign(name, files)
   save(list = c(name), file = path)
 }
 
 exportFullData.dots <- function(files, name = 'dotstask.full') {
-  require(stringr)
-  path <- paste0('data/', str_replace(name, '\\.', '-'), '.Rdata')
+  path <- paste0('data/', name, '.Rdata')
   print(paste0('Export data to ', path, '.'))
   print('1. Tag data')
   files <- tagData.dots(files)
@@ -73,11 +83,9 @@ exportFullData.dots <- function(files, name = 'dotstask.full') {
 
 #' Add information about studies to the raw data table
 #' @param files raw data table
+#' @importFrom dplyr mutate case_when %>%
 #' @return files with metadata added
 tagData.dots <- function(files) {
-  require(dplyr)
-  require(purrr)
-  require(stringr)
 
   files$N <- sapply(
     files$data,
@@ -180,19 +188,23 @@ tagData.dots <- function(files) {
     )
 }
 
+#' Fetch dictionary files for dots data
+#' @importFrom tibble tibble
+#' @importFrom dplyr %>% mutate select
+#' @importFrom rlang .data
+#' @importFrom purrr map
 getDictionaries.dots <- function() {
-  require(jsonlite)
   dicts <- tibble(name = c('advisors', 'debrief', 'genTrustQ', 'participants', 'questionnaires', 'trials'))
   dicts %>%
     mutate(
-      url = paste0('http://localhost/ExploringSocialMetacognition/analysis/dictionary_', name, '.csv'),
+      url = paste0('http://localhost/ExploringSocialMetacognition/analysis/dictionary_', .data$name, '.csv'),
       csv = map(
         url,
         ~ read.csv(., header = F) %>%
           as_tibble()
       ),
-      json = map(csv, dictToJSON)
-    ) %>% select(name, json)
+      json = map(.data$csv, dictToJSON)
+    ) %>% select(.data$name, .data$json)
 }
 
 addLabels.dots <- function(files, dictionaryPrefix = 'dots') {
@@ -201,5 +213,5 @@ addLabels.dots <- function(files, dictionaryPrefix = 'dots') {
 
 saveLocalDictionaries.dots <- function() saveLocalDictionaries(getDictionaries.dots(), prefix = 'dots')
 
-load('extdata/dotstask-raw.Rdata')
-load('data/dotstask-full.Rdata')
+load('inst/extdata/dotstask.raw.Rdata')
+load('data/dotstask.full.Rdata')
