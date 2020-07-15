@@ -6,19 +6,15 @@ Author: Matt Jaquiery
 Maintainer: Matt Jaquiery <matt.jaquiery@psy.ox.ac.uk>
 Description: Provides data collected during Matt Jaquiery's DPhil project 
     'Exploring Social Metacognition'. All data collected via Prolific.
+    The data contain nested dataframes, so inspecting them via print() will 
+    cause hanging behaviour. For best results, load data as a tibble manually
+    or use this packages tada() function.
 License: CC BY 4.0
 Encoding: UTF-8
 LazyData: true
 Depends: 
   R (>= 3.5.0)
-Imports: 
-  jsonlite,
-  tibble,
-  dplyr,
-  curl,
-  purrr,
-  stringr,
-  sjlabelled,
-  tidyselect,
-  rlang
+Imports:
+  utils,
+  tibble
 RoxygenNote: 7.1.1
