@@ -6,9 +6,11 @@ Author: Matt Jaquiery
 Maintainer: Matt Jaquiery <matt.jaquiery@psy.ox.ac.uk>
 Description: Provides data collected during Matt Jaquiery's DPhil project 
     'Exploring Social Metacognition'. All data collected via Prolific.
-License: CC-BY
+License: CC BY 4.0
 Encoding: UTF-8
 LazyData: true
+Depends: 
+  R (>= 3.5.0)
 Imports: 
   jsonlite,
   tibble,
