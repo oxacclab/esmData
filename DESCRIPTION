@@ -16,5 +16,6 @@ Depends:
   R (>= 3.5.0)
 Imports:
   utils,
-  tibble
+  tibble,
+  dplyr
 RoxygenNote: 7.1.1
