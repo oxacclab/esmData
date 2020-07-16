@@ -31,7 +31,7 @@ fetchRawData.dots <- function() {
     results$trials <- bind_cols(results$trials, trialUtilityVariables(results))
 
     df <- tibble(
-      folderName = folderName,
+      url = folderName,
       table = names(results),
       data = map(table, ~ results[[.]] %>% as_tibble())
     )
@@ -48,8 +48,8 @@ fetchRawData.dots <- function() {
   # split by study and version
   tmp <- tmp %>%
     mutate(
-      study = str_match(folderName, '/AdvisorChoice/results/([^/]+)/')[, 2],
-      version = str_match(folderName, '/AdvisorChoice/results/[^/]+/([^/]+)')[, 2],
+      study = str_match(url, '/AdvisorChoice/results/([^/]+)/')[, 2],
+      version = str_match(url, '/AdvisorChoice/results/[^/]+/([^/]+)')[, 2],
       version = if_else(version %in% c('processed', 'raw'), .data$study, .data$version),
       date = str_match(version, '^([0-9]{4}-[0-9]{2}-[0-9]{2})'),
       date = if_else(is.na(date[, 1]), NA_character_, date[, 2]),
@@ -88,7 +88,7 @@ tagData.dots <- function(files) {
     function(x)
       ifelse('pid' %in% names(x),
              length(unique(x$pid)),
-             NA_real_)
+             length(unique(x$id)))
     )
 
   files %>%
