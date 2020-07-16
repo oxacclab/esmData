@@ -27,9 +27,9 @@ select_experiment <- function(project, f = function(x) dlpyr::filter(x), envir =
     n <- D$table[i]
     if (n %in% ls(envir = envir)) {
       # Try to merge dataframes
-      assign(n, bind_rows(get(n, envir = envir), D$data[i]), envir = envir)
+      assign(n, bind_rows(get(n, envir = envir), D$data[[i]]), envir = envir)
     } else {
-      assign(n, D$data[i], envir = envir)
+      assign(n, D$data[[i]], envir = envir)
     }
   }
 }
