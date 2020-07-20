@@ -27,7 +27,13 @@ select_experiment <- function(project, f = function(x) dlpyr::filter(x), envir =
     n <- D$table[i]
     if (n %in% ls(envir = envir)) {
       # Try to merge dataframes
-      assign(n, bind_rows(get(n, envir = envir), D$data[[i]]), envir = envir)
+      tryCatch({
+        assign(n, bind_rows(get(n, envir = envir), D$data[[i]]), envir = envir)
+      }, error = function(e) {
+        warning(paste0('Unable to automatically join rows for "', n, '".\n',
+                       'bind_rows() error was: ', e))
+        assign(n, rbind(get(n, envir = envir), D$data[[i]]), envir = envir)
+      })
     } else {
       assign(n, D$data[[i]], envir = envir)
     }
