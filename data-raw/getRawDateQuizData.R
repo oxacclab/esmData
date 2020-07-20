@@ -17,7 +17,7 @@ library(rlang)
 #' @param fileDetails tbl row describing the file with $url, $study, $version, $table
 #' @importFrom curl curl
 #' @importFrom tibble as_tibble
-#' @importFrom dplyr %>% mutate_if filter bind_rows bind_cols
+#' @importFrom dplyr %>% mutate_if filter bind_rows bind_cols select arrange
 #' @importFrom stringr str_extract str_detect
 #' @importFrom utils read.csv
 #' @importFrom rlang .data
@@ -32,7 +32,10 @@ library(rlang)
   if (!all(c('url', 'table') %in% names(fileDetails)))
     stop('fileDetails variable missing required field. (Required fields = url, table.)')
 
-  csv <- read.csv(fileDetails['url']) %>% as_tibble()
+  if (class('tbl') %in% class(fileDetails['url']))
+    csv <- fileDetails['url'] %>% read.csv() %>% as_tibble()
+  else
+    csv <- fileDetails %>% pull('url') %>% read.csv() %>% as_tibble()
 
   if (str_detect(fileDetails['table'], 'Trial')) {
     if (!all(c('study', 'version') %in% names(fileDetails)))
@@ -70,21 +73,26 @@ library(rlang)
         filter(.data$isAttentionCheck %in% attn) %>%
         mutate_if(is.factor, as.character)
       tmp$pid <- json$id
-      d <- bind_rows(d, tmp)
+      d <- bind_rows(d, tmp %>% select(names(tmp)[order(names(tmp))]))
       close(con)
     }
 
+    # Save name order for restoring later
+    name_order <- names(csv)
     overwrite <- names(csv)[names(csv) %in% names(d)]
 
     if (!is.null(overwrite) && length(overwrite) > 0) {
-      for (i in 1:nrow(csv)) {
-        dRow <- d[d$pid == csv$pid[i] &
-                    d$timestampStart == csv$timestampStart[i],
-                  overwrite]
-        if (!is.null(dRow) & nrow(dRow) == 1)
-          for (n in names(overwrite))
-            csv[i, n] <- dRow[1, n]
+      if (nrow(d) != nrow(csv)) {
+        warning('Mismatched row counts for raw (JSON) and processed (CSV) data - skipping raw data overwrite.')
+        return(csv)
       }
+
+      csv <- csv %>% arrange(timestampStart, pid)
+      d <- d %>% arrange(timestampStart, pid)
+
+      csv <- csv[, !(names(csv) %in% overwrite)]
+      csv <- bind_cols(csv, d)
+      csv <- csv %>% select(name_order)
     }
   }
 
@@ -94,13 +102,14 @@ library(rlang)
 # List server files -------------------------------------------------------
 
 #' Fetch raw data from the project server
+#' @param cores number of cores to run the data extraction on in parallel
 #' @importFrom curl curl
 #' @importFrom tibble as_tibble
 #' @importFrom purrr set_names
 #' @importFrom dplyr %>%
 #' @importFrom stringr str_match str_extract
 #' @importFrom parallel makeCluster detectCores clusterExport parApply stopCluster
-fetchRawData <- function() {
+fetchRawData <- function(cores = parallel::detectCores() - 4) {
 
   rDir <- "https://acclab.psy.ox.ac.uk/~mj221/ESM/data/public/"
 
@@ -130,12 +139,18 @@ fetchRawData <- function() {
   x <- files %>% filter(str_detect(table, 'Trial'))
   y <- files %>% filter(!str_detect(table, 'Trial'))
 
-  cl <- makeCluster(detectCores() - 4)
-  clusterExport(cl, '.fetchData')
-  x$data <- parApply(cl, x, 1, .fetchData)
-  y$data <- parApply(cl, y, 1, .fetchData)
-  files <- rbind(x, y)
-  stopCluster(cl)
+  if (cores > 1) {
+    cl <- makeCluster(cores)
+    clusterExport(cl, '.fetchData')
+    x$data <- parApply(cl, x, 1, .fetchData)
+    y$data <- parApply(cl, y, 1, .fetchData)
+    stopCluster(cl)
+  } else {
+    x$data <- apply(x, 1, .fetchData)
+    y$data <- apply(y, 1, .fetchData)
+  }
+
+    files <- rbind(x, y)
 
   files
 }

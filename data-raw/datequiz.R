@@ -1,5 +1,5 @@
 # Procedural code ---------------------------------------------------------
-
+library(tidyverse)
 source('data-raw/getRawDateQuizData.R')
 
 saveLocalDictionaries(getDictionaries.dates())
