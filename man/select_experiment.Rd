@@ -6,7 +6,7 @@
 \usage{
 select_experiment(
   project,
-  f = function(x) dlpyr::filter(x),
+  f = function(x) dplyr::filter(x),
   envir = .GlobalEnv
 )
 }

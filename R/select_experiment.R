@@ -6,7 +6,7 @@
 #' @importFrom tibble as_tibble tibble
 #' @importFrom dplyr %>% bind_rows across summarise select
 #' @export
-select_experiment <- function(project, f = function(x) dlpyr::filter(x), envir = .GlobalEnv) {
+select_experiment <- function(project, f = function(x) dplyr::filter(x), envir = .GlobalEnv) {
   tada(project, package = 'esmData')
 
   assign('D', get(project))
