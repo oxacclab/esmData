@@ -30,7 +30,8 @@ select_experiment <- function(project, f = function(x) dplyr::filter(x), envir =
       tryCatch({
         assign(n, bind_rows(get(n, envir = envir), D$data[[i]]), envir = envir)
       }, error = function(e) {
-        warning(paste0('Unable to automatically join rows for "', n, '".\n',
+        warning(paste0('Unable to automatically join rows for "',
+                       n, '" (', D$study[i], ' ', D$version[i], ').\n',
                        'bind_rows() error was: ', e))
         assign(n, rbind(get(n, envir = envir), D$data[[i]]), envir = envir)
       })

@@ -1,7 +1,7 @@
 Package: esmData
 Type: Package
 Title: Exploring Social Metacognition Data
-Version: 0.1.0
+Version: 0.1.1
 Author: Matt Jaquiery
 Maintainer: Matt Jaquiery <matt.jaquiery@psy.ox.ac.uk>
 Description: Provides data collected during Matt Jaquiery's DPhil project 
