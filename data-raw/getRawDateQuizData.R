@@ -32,6 +32,7 @@ library(rlang)
   if (!all(c('url', 'table') %in% names(fileDetails)))
     stop('fileDetails variable missing required field. (Required fields = url, table.)')
 
+  print(fileDetails['url'])
   if (class('tbl') %in% class(fileDetails['url']))
     csv <- fileDetails['url'] %>% read.csv() %>% as_tibble()
   else
@@ -84,19 +85,91 @@ library(rlang)
     if (!is.null(overwrite) && length(overwrite) > 0) {
       if (nrow(d) != nrow(csv)) {
         warning('Mismatched row counts for raw (JSON) and processed (CSV) data - skipping raw data overwrite.')
-        return(csv)
+      } else {
+        csv <- csv %>% arrange(timestampStart, pid)
+        d <- d %>% arrange(timestampStart, pid)
+
+        csv <- csv[, !(names(csv) %in% overwrite)]
+        csv <- bind_cols(csv, d)
+        csv <- csv %>% select(all_of(name_order))
       }
-
-      csv <- csv %>% arrange(timestampStart, pid)
-      d <- d %>% arrange(timestampStart, pid)
-
-      csv <- csv[, !(names(csv) %in% overwrite)]
-      csv <- bind_cols(csv, d)
-      csv <- csv %>% select(name_order)
     }
   }
 
+  # Ensure the R data type matches the dictionary type entry
+  types <- tibble(n = names(csv), pre = NA, post = NA)
+  types$pre <- sapply(names(csv), function(n) typeof(unlist(csv[, n])))
+  csv <- enforceTypes(csv, fileDetails["table"])
+  types$post <- sapply(names(csv), function(n) typeof(unlist(csv[, n])))
+  print(paste0('Type changes for ', fileDetails['study'], fileDetails['version'], ': ', fileDetails['table']))
+  types %>% filter(pre != post) %>% print()
+
+
   csv
+}
+
+#' Read a dictionary file and retype a tbl to obey the types listed in
+#' the dictionary.
+#' @param x tbl to retype
+#' @param name name of the tbl for finding the dictionary
+#' @param verbose print details about 'all' columns, only 'changes', or 'none'
+#' @importFrom utils read.csv
+#' @importFrom stringr str_replace str_detect
+#' @importFrom dplyr filter %>% pull
+#' @return x with types matching those listed in its dictionary
+enforceTypes <- function(x, name, verbose = c('all')) {
+  if (length(x) == 1 & is.null(names(x)))
+      x <- x[[1]]
+  # Find dictionary
+  path <- paste0('inst/extdata/dictionary_', name, '.csv')
+  if (!file.exists(path)) {
+    warning(paste0('No dictionary found at ', path, '.'))
+    return(x)
+  }
+  d <- read.csv(path)
+  # Update types
+  for (n in names(x)) {
+    dn <- str_replace(n, 'advisor[0-9]+', 'advisor[0-9]+')
+    if (!(dn %in% d$name)) {
+      warning(paste0('No dictionary entry for ', name, '$', n, '.'))
+      next()
+    }
+    printN <- if (n == dn) n else paste0(n, ' [', dn, ']')
+    dt <- d %>% filter(name == dn) %>% pull(value) %>% .[[1]]
+    f <- case_when(str_detect(dt, 'str') ~ "character",
+                   str_detect(dt, 'obj') ~ "character",
+                   str_detect(dt, 'int') ~ "numeric",
+                   str_detect(dt, 'doub') ~ "numeric",
+                   str_detect(dt, 'float') ~ "numeric",
+                   str_detect(dt, 'bool') ~ "logical",
+                   str_detect(dt, 'logic') ~ "logical",
+                   str_detect(dt, '\\*') ~ "tibble",
+                   T ~ NA_character_)
+    if (f == 'tibble') {
+      if ('changes' %in% verbose | 'all' %in% verbose)
+        print(paste0('Converting ', name, '$', printN, ' to ', f))
+      x <- x %>% mutate_at(n, as_tibble)
+      next()
+    }
+    if (is.na(f)) {
+      warning(paste0('Could not parse type "', dt, '" for ', name, '$', n, '.'))
+      next()
+    } else {
+      if (do.call(paste0('is.', f), list(unlist(x[, n])))) {
+        if ('all' %in% verbose)
+          print(paste0(name, '$', printN, ' is already of type ', f))
+      } else {
+        if ('changes' %in% verbose | 'all' %in% verbose)
+          print(paste0('Converting ', name, '$', printN, ' to type ', f))
+      }
+      tryCatch(
+        {x[, n] <- do.call(paste0('as.', f), list(unlist(x[, n]))) %>% as_tibble()},
+        error = function(e)
+          warning(paste0('Could not convert ', name, '$', n, ' using ', f, '. Error:\n', e))
+      )
+    }
+  }
+  x
 }
 
 # List server files -------------------------------------------------------
@@ -140,8 +213,8 @@ fetchRawData <- function(cores = parallel::detectCores() - 4) {
   y <- files %>% filter(!str_detect(table, 'Trial'))
 
   if (cores > 1) {
-    cl <- makeCluster(cores)
-    clusterExport(cl, '.fetchData')
+    cl <- makeCluster(cores, outfile = 'I:/TMP/r-parallel.log')
+    clusterExport(cl, c('.fetchData', 'enforceTypes'))
     x$data <- parApply(cl, x, 1, .fetchData)
     y$data <- parApply(cl, y, 1, .fetchData)
     stopCluster(cl)
@@ -150,7 +223,7 @@ fetchRawData <- function(cores = parallel::detectCores() - 4) {
     y$data <- apply(y, 1, .fetchData)
   }
 
-    files <- rbind(x, y)
+  files <- rbind(x, y)
 
   files
 }

@@ -33,7 +33,9 @@ fetchRawData.dots <- function() {
     df <- tibble(
       url = folderName,
       table = names(results),
-      data = map(table, ~ results[[.]] %>% as_tibble())
+      data = map(table, ~ results[[.x]] %>%
+                   as_tibble() %>%
+                   enforceTypes(paste0('dots-', .x)))
     )
 
     # drop empty
