@@ -26,7 +26,7 @@ annotate_responses <- function(AdvisedTrial) {
 mark_responses <- function(AdvisedTrial) {
   # Spread into individual estimates
   tmp <- AdvisedTrial %>%
-    select(matches('^(pid|timestamp|response|advisor|correct)')) %>%
+    select(matches('^(pid|study|timestamp|response|advisor|correct)')) %>%
     mutate(
       responseEstimateCentre = .data$responseEstimateLeft + .data$responseMarkerWidth / 2,
       responseEstimateCentreFinal = .data$responseEstimateLeftFinal + .data$responseMarkerWidthFinal / 2
@@ -64,7 +64,8 @@ mark_responses <- function(AdvisedTrial) {
   tmp <- tmp %>%
     select(-.data$min, -.data$max, -.data$value, -.data$name, -.data$width) %>%
     rename_with(str_to_sentence, .cols = c(.data$correct, .data$error)) %>%
-    pivot_wider(id_cols = c(.data$pid, .data$timestampStart), names_from = c(.data$prefix, .data$suffix),
+    pivot_wider(id_cols = c(.data$timestampStart, .data$pidHash, .data$studyId, .data$studyVersion),
+                names_from = c(.data$prefix, .data$suffix),
                 names_glue = "{prefix}{.value}{suffix}",
                 values_from = c(.data$Correct, .data$Error))
 
