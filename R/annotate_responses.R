@@ -64,7 +64,7 @@ mark_responses <- function(AdvisedTrial) {
   tmp <- tmp %>%
     select(-.data$min, -.data$max, -.data$value, -.data$name, -.data$width) %>%
     rename_with(str_to_sentence, .cols = c(.data$correct, .data$error)) %>%
-    pivot_wider(id_cols = c(.data$timestampStart, .data$pidHash, .data$studyId, .data$studyVersion),
+    pivot_wider(id_cols = matches('^(pid|study|timestamp)'),
                 names_from = c(.data$prefix, .data$suffix),
                 names_glue = "{prefix}{.value}{suffix}",
                 values_from = c(.data$Correct, .data$Error))
@@ -103,8 +103,8 @@ rate_influence <- function(AdvisedTrial) {
       .middleFinal = .data$responseEstimateLeftFinal + .data$responseMarkerWidthFinal / 2,
       estimateIncrease = .data$.middleFinal - .data$.middle,
       influence = case_when(
-        .data$.middle < .data$adviceCentre ~ -.data$estimateIncrease,
-        .data$.middle > .data$adviceCentre ~ .data$estimateIncrease,
+        .data$.middle < .data$adviceCentre ~ .data$estimateIncrease,
+        .data$.middle > .data$adviceCentre ~ -.data$estimateIncrease,
         T ~ NA_real_
       ),
       woaRaw = (.data$.middleFinal - .data$.middle) / (.data$adviceCentre - .data$.middle),
