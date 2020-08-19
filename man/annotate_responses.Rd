@@ -4,14 +4,14 @@
 \alias{annotate_responses}
 \title{Add variables assessing the correctness, influence etc. of estimates}
 \usage{
-annotate_responses(AdvisedTrial)
+annotate_responses(X)
 }
 \arguments{
-\item{AdvisedTrial}{tbl of initial estimates and final decisions made with
+\item{X}{tbl of initial estimates and final decisions made with
 advice}
 }
 \value{
-\code{AdvisedTrial} with variables:
+\code{X} with variables:
 
 \itemize{
 \item{[reponse/advisor#]Correct[Final]}{whether the estimate was correct}

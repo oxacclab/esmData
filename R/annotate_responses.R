@@ -1,7 +1,7 @@
 #' Add variables assessing the correctness, influence etc. of estimates
-#' @param AdvisedTrial tbl of initial estimates and final decisions made with
+#' @param X tbl of initial estimates and final decisions made with
 #'   advice
-#' @return \code{AdvisedTrial} with variables:
+#' @return \code{X} with variables:
 #'
 #' \itemize{
 #' \item{[reponse/advisor#]Correct[Final]}{whether the estimate was correct}
@@ -9,7 +9,37 @@
 #' }
 #'
 #' @export
-annotate_responses <- function(AdvisedTrial) {
+annotate_responses <- function(X) {
+  changed <- F
+  # Detect which kind of data we have using some heuristics
+  if ('responseEstimateLeft' %in% names(X)) {
+    X <- annotate_responses.AdvisedTrial(X)
+    changed <- T
+  } else {
+    if ('initialAnswer' %in% names(X)) {
+      X <- annotate_responses.trials(X)
+      changed <- T
+    }
+  }
+  if (!changed)
+    warning('Could not determine appropriate annotation function from names(X).')
+  X
+}
+
+#' Add variables assessing the correctness, influence etc. of estimates
+#' @param AdvisedTrial tbl of initial estimates and final decisions made with
+#'   advice in the dates task
+#' @return \code{AdvisedTrial} with variables:
+#'
+#' \itemize{
+#' \item{[reponse/advisor#]Correct[Final]}{whether the estimate was correct}
+#' \item{[reponse/advisor#]Error[Final]}{absolute difference between the correct answer and the centre of the estimate}
+#' \item{estimateIncrease}{Difference between final and initial estimate}
+#' \item{influence}{Difference between final and initial estimate signed in the direction of the advice}
+#' \item{woaRaw}{Weight on advice = (final - initial) / (advice - initial)}
+#' \item{woa}{Winzorized version of WoA Raw to range [0-1]}
+#' }
+annotate_responses.AdvisedTrial <- function(AdvisedTrial) {
   AdvisedTrial <- mark_responses(AdvisedTrial)
   AdvisedTrial <- rate_influence(AdvisedTrial)
   AdvisedTrial
@@ -152,4 +182,46 @@ rate_influence <- function(AdvisedTrial) {
 #' @export
 get_influence_binary <- function(AdvisedTrial) {
 
+}
+
+#' Add variables assessing the correctness, influence etc. of estimates
+#' @param trials tbl of initial estimates and final decisions made with
+#'  advice in the dots task
+#' @return \code{AdvisedTrial} with variables:
+#'
+#' \itemize{
+#' \item{[reponse/advisor#]Correct[Final]}{whether the estimate was correct}
+#' \item{estimateIncrease}{Difference between final and initial estimate}
+#' \item{adviceInfluence}{Difference between final and initial estimate signed in the direction of the advice}
+#' \item{adviceInfluenceCapped}{Difference between final and initial estimate signed in the direction of the advice capped to the maximum value which could have been given if confidence had increased and the answer side remained the same.}
+#' }
+#'
+#' @importFrom rlang .data
+#' @importFrom dplyr mutate %>% if_else case_when select starts_with
+annotate_responses.trials <- function(trials) {
+  trials %>%
+    # mark responses
+    mutate(
+      initialAnswerCorrect = .data$initialAnswer == .data$correctAnswer,
+      finalAnswerCorrect = .data$finalAnswer == .data$correctAnswer,
+      adviceCorrect = .data$adviceSide == .data$correctAnswer
+    ) %>%
+    # Calculate influence and woa
+    mutate(
+      adviceInfluence = case_when(
+        initialAnswer == .data$adviceSide & !.data$switch ~
+          .data$finalConfidence - .data$initialConfidence,
+        initialAnswer != .data$adviceSide & switch ~
+          .data$finalConfidence + .data$initialConfidence,
+        initialAnswer != .data$adviceSide & !.data$switch ~
+          .data$initialConfidence - .data$finalConfidence,
+        initialAnswer == .data$adviceSide & .data$switch ~
+          -(.data$finalConfidence + .data$initialConfidence)
+      ),
+      .max = 50 - .data$initialConfidence,
+      adviceInfluenceCapped = if_else(abs(.data$adviceInfluence) > .data$.max,
+                                      .data$.max * sign(.data$adviceInfluence),
+                                      .data$adviceInfluence)
+    ) %>%
+    select(-starts_with('.'))
 }
