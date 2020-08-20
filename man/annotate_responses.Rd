@@ -11,11 +11,16 @@ annotate_responses(X)
 advice}
 }
 \value{
-\code{X} with variables:
+\code{X} with variables (*=binary only, ^=continuous only):
 
 \itemize{
 \item{[reponse/advisor#]Correct[Final]}{whether the estimate was correct}
-\item{[reponse/advisor#]Error[Final]}{absolute difference between the correct answer and the centre of the estimate}
+\item{[reponse/advisor#]Error[Final]^}{absolute difference between the correct answer and the centre of the estimate}
+\item{EstimateIncrease}{Difference between final and initial estimate}
+\item{Influence}{Difference between final and initial estimate signed in the direction of the advice}
+\item{InfluenceCapped*}{Influence capped by the maximum potential increase}
+\item{WOAraw^}{Weight on advice = (final - initial) / (advice - initial)}
+\item{WOA^}{Winzorized version of WoA Raw to range [0-1]}
 }
 }
 \description{
