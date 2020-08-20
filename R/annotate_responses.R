@@ -84,10 +84,8 @@ annotate_responses.AdvisedTrial.binary <- function(AdvisedTrial) {
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data has_name
 mark_responses <- function(AdvisedTrial) {
-  if (!has_name(AdvisedTrial, 'responseEstimateLeft') |
-      all(is.na(AdvisedTrial$responseEstimateLeft))) {
-    return(AdvisedTrial)
-  }
+  if (!has_name(AdvisedTrial, 'responseEstimateLeft')) {return(AdvisedTrial)}
+  if (all(is.na(AdvisedTrial$responseEstimateLeft))) {return(AdvisedTrial)}
 
   # Spread into individual estimates
   tmp <- AdvisedTrial %>%
@@ -149,10 +147,8 @@ mark_responses <- function(AdvisedTrial) {
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data has_name
 mark_responses.binary <- function(AdvisedTrial) {
-  if (!has_name(AdvisedTrial, 'responseAnswerSide') |
-      all(is.na(AdvisedTrial$responseAnswerSide))) {
-    return(AdvisedTrial)
-  }
+  if (!has_name(AdvisedTrial, 'responseAnswerSide')) {return(AdvisedTrial)}
+  if (all(is.na(AdvisedTrial$responseAnswerSide))) {return(AdvisedTrial)}
 
   # Spread into individual estimates
   tmp <- AdvisedTrial %>%
@@ -197,6 +193,9 @@ mark_responses.binary <- function(AdvisedTrial) {
 #' @improtFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data
 rate_influence <- function(AdvisedTrial) {
+  if (!has_name(AdvisedTrial, 'responseEstimateLeft')) {return(AdvisedTrial)}
+  if (all(is.na(AdvisedTrial$responseEstimateLeft))) {return(AdvisedTrial)}
+
   # Reshape to separate out advisors
   tmp <- AdvisedTrial %>%
     rename_with(~ str_replace(., 'advisor([0-9]+)', 'x\\1'), .cols = matches('advisor[0-9]+$')) %>%
@@ -249,6 +248,9 @@ rate_influence <- function(AdvisedTrial) {
 #' @improtFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data
 rate_influence.binary <- function(AdvisedTrial) {
+  if (!has_name(AdvisedTrial, 'responseAnswerSide')) {return(AdvisedTrial)}
+  if (all(is.na(AdvisedTrial$responseAnswerSide))) {return(AdvisedTrial)}
+
   # Reshape to separate out advisors
   tmp <- AdvisedTrial %>%
     rename_with(~ str_replace(., 'advisor([0-9]+)', 'x\\1'), .cols = matches('advisor[0-9]+$')) %>%
@@ -271,7 +273,7 @@ rate_influence.binary <- function(AdvisedTrial) {
       ),
       Influence = case_when(
         .data$.agree ~ .data$EstimateIncrease,
-        .data$.agree ~ -.data$EstimateIncrease,
+        !.data$.agree ~ -.data$EstimateIncrease,
         T ~ NA_real_
       ),
       InfluenceCapped = if_else(abs(.data$Influence) > .data$.max,
