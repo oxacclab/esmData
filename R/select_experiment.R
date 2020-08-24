@@ -9,34 +9,34 @@
 select_experiment <- function(project, f = function(x) dplyr::filter(x), envir = .GlobalEnv) {
   tada(project, package = 'esmData')
 
-  assign('D', get(project))
+  assign('D', get(project), envir = envir)
 
-  D <- f(D)
+  envir$D <- f(envir$D)
 
   # Produce summary table
   assign(
     project,
-    D %>%
+    envir$D %>%
       select(-url, -data) %>%
       summarise(across(-table), tables = paste0(table, collapse = ';')) %>%
       unique(),
     envir = envir
   )
 
-  for (i in 1:nrow(D)) {
-    n <- D$table[i]
+  for (i in 1:nrow(envir$D)) {
+    n <- envir$D$table[i]
     if (n %in% ls(envir = envir)) {
       # Try to merge dataframes
       tryCatch({
-        assign(n, bind_rows(get(n, envir = envir), D$data[[i]]), envir = envir)
+        assign(n, bind_rows(get(n, envir = envir), envir$D$data[[i]]), envir = envir)
       }, error = function(e) {
         warning(paste0('Unable to automatically join rows for "',
-                       n, '" (', D$study[i], ' ', D$version[i], ').\n',
+                       n, '" (', envir$D$study[i], ' ', envir$D$version[i], ').\n',
                        'bind_rows() error was: ', e))
-        assign(n, rbind(get(n, envir = envir), D$data[[i]]), envir = envir)
+        assign(n, rbind(get(n, envir = envir), envir$D$data[[i]]), envir = envir)
       })
     } else {
-      assign(n, D$data[[i]], envir = envir)
+      assign(n, envir$D$data[[i]], envir = envir)
     }
   }
 }
