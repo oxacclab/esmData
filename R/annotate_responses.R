@@ -190,7 +190,7 @@ mark_responses.binary <- function(AdvisedTrial) {
 #' \item{WOA}{Winzorized version of WoA Raw to range [0-1]}
 #' }
 #' @importFrom dplyr rename_with %>% starts_with mutate case_when select
-#' @improtFrom tidyr pivot_longer pivot_wider
+#' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data
 rate_influence <- function(AdvisedTrial) {
   if (!has_name(AdvisedTrial, 'responseEstimateLeft')) {return(AdvisedTrial)}
@@ -245,7 +245,7 @@ rate_influence <- function(AdvisedTrial) {
 #' \item{InfluenceCapped}{Influence capped by the maximum potential increase}
 #' }
 #' @importFrom dplyr rename_with %>% starts_with mutate case_when select matches
-#' @improtFrom tidyr pivot_longer pivot_wider
+#' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data
 rate_influence.binary <- function(AdvisedTrial) {
   if (!has_name(AdvisedTrial, 'responseAnswerSide')) {return(AdvisedTrial)}
