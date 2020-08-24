@@ -202,6 +202,7 @@ mark_responses.binary <- function(AdvisedTrial) {
 rate_influence <- function(AdvisedTrial) {
   if (!has_name(AdvisedTrial, 'responseEstimateLeft')) {return(AdvisedTrial)}
   if (all(is.na(AdvisedTrial$responseEstimateLeft))) {return(AdvisedTrial)}
+  if (!any(str_detect(names(AdvisedTrial), 'advisor[0-9]+'))) {return(AdvisedTrial)}
 
   # Reshape to separate out advisors
   tmp <- AdvisedTrial %>%
@@ -257,6 +258,7 @@ rate_influence <- function(AdvisedTrial) {
 rate_influence.binary <- function(AdvisedTrial) {
   if (!has_name(AdvisedTrial, 'responseAnswerSide')) {return(AdvisedTrial)}
   if (all(is.na(AdvisedTrial$responseAnswerSide))) {return(AdvisedTrial)}
+  if (!any(str_detect(names(AdvisedTrial), 'advisor[0-9]+'))) {return(AdvisedTrial)}
 
   # Reshape to separate out advisors
   tmp <- AdvisedTrial %>%
