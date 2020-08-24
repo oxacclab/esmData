@@ -91,9 +91,16 @@ mark_responses <- function(AdvisedTrial) {
   tmp <- AdvisedTrial %>%
     # Add in responseEstimateCentre calculations
     mutate(
-      responseEstimateCentre = .data$responseEstimateLeft + .data$responseMarkerWidth / 2,
+      responseEstimateCentre = .data$responseEstimateLeft + .data$responseMarkerWidth / 2
+    )
+
+  if (has_name(tmp, 'responseEstimateLeftFinal')) {
+    tmp <- tmp %>% mutate(
       responseEstimateCentreFinal = .data$responseEstimateLeftFinal + .data$responseMarkerWidthFinal / 2
-    ) %>%
+    )
+  }
+
+  tmp <- tmp %>%
     select(matches('^(pid|study|timestamp|response|advisor|correct)')) %>%
     rename_with(
       ~ str_replace(., '(advisor[0-9]+)advice(Width)', '\\1Marker\\2'),
