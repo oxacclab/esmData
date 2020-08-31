@@ -7,9 +7,10 @@
 #' @importFrom dplyr %>% bind_rows across summarise select
 #' @export
 select_experiment <- function(project, f = function(x) dplyr::filter(x), envir = .GlobalEnv) {
-  tada(project, package = 'esmData')
+  .fEnv <- new.env()
+  tada(project, package = 'esmData', envir = .fEnv)
 
-  assign('D', get(project))
+  assign('D', get(project, envir = .fEnv))
 
   D <- f(D)
 
