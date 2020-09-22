@@ -144,12 +144,14 @@ mark_responses <- function(AdvisedTrial) {
   left_join(AdvisedTrial, tmp, by = names(tmp)[names(tmp) %in% names(AdvisedTrial)])
 }
 
-#' Add variables indicating error, correctness, etc. for estimates
+#' Add variables indicating error, correctness, etc. for estimates.
 #' @param AdvisedTrial tbl of initial estimates and final decisions made with
 #'   advice
 #'
-#' @return \code{AdvisedTrial} with correct columns for initial estimate, final decision, and any advisory estimates
-#' @importFrom dplyr mutate %>% select matches rename_with left_join if_else
+#' @details confidenceScore is a confidence expressed as a proportion of maximum confidence
+#'
+#' @return \code{AdvisedTrial} with confidenceScore and correct columns for initial estimate, final decision, and any advisory estimates
+#' @importFrom dplyr mutate %>% select matches rename_with left_join if_else across
 #' @importFrom stringr str_replace str_c str_extract str_ends str_to_sentence
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data has_name
@@ -183,7 +185,24 @@ mark_responses.binary <- function(AdvisedTrial) {
                 values_from = .data$Correct)
 
   # Join back onto the main tbl
-  left_join(AdvisedTrial, tmp, by = names(tmp)[names(tmp) %in% names(AdvisedTrial)])
+  tmp <- left_join(
+    AdvisedTrial,
+    tmp,
+    by = names(tmp)[names(tmp) %in% names(AdvisedTrial)]
+  )
+
+  tmp2 <- tmp %>%
+    mutate(
+      across(.cols = matches('[Cc]onfidence(Final)?$'), .fns = ~ . / 100)
+    ) %>%
+    rename_with(~str_replace(., '([Cc]onfidence)(Final)?$', '\\1Score\\2'))
+
+  # Add in confidenceScore
+  left_join(
+    tmp,
+    tmp2,
+    by = names(tmp2)[names(tmp2) %in% names(tmp)]
+  )
 }
 
 #' Add variables indicating error, correctness, etc. for estimates
@@ -199,6 +218,7 @@ mark_responses.binary <- function(AdvisedTrial) {
 #' @importFrom dplyr rename_with %>% starts_with mutate case_when select
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data
+#' @importFrom stringr str_detect
 rate_influence <- function(AdvisedTrial) {
   if (!has_name(AdvisedTrial, 'responseEstimateLeft')) {return(AdvisedTrial)}
   if (all(is.na(AdvisedTrial$responseEstimateLeft))) {return(AdvisedTrial)}
@@ -255,6 +275,7 @@ rate_influence <- function(AdvisedTrial) {
 #' @importFrom dplyr rename_with %>% starts_with mutate case_when select matches
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom rlang .data
+#' @importFrom stringr str_detect
 rate_influence.binary <- function(AdvisedTrial) {
   if (!has_name(AdvisedTrial, 'responseAnswerSide')) {return(AdvisedTrial)}
   if (all(is.na(AdvisedTrial$responseAnswerSide))) {return(AdvisedTrial)}
@@ -316,26 +337,29 @@ rate_influence.binary <- function(AdvisedTrial) {
 #' @importFrom rlang .data
 #' @importFrom dplyr mutate %>% if_else case_when select starts_with
 annotate_responses.trials <- function(trials) {
+  max_conf <- 50
   trials %>%
     # mark responses
     mutate(
       initialAnswerCorrect = .data$initialAnswer == .data$correctAnswer,
       finalAnswerCorrect = .data$finalAnswer == .data$correctAnswer,
-      adviceCorrect = .data$adviceSide == .data$correctAnswer
+      adviceCorrect = .data$adviceSide == .data$correctAnswer,
+      initialConfidenceScore = .data$initialConfidence / max_conf,
+      finalConfidenceScore = .data$finalConfidence / max_conf
     ) %>%
     # Calculate influence
     mutate(
       adviceInfluence = case_when(
         initialAnswer == .data$adviceSide & !.data$switch ~
-          .data$finalConfidence - .data$initialConfidence,
+          .data$finalConfidenceScore - .data$initialConfidenceScore,
         initialAnswer != .data$adviceSide & switch ~
-          .data$finalConfidence + .data$initialConfidence,
+          .data$finalConfidenceScore + .data$initialConfidenceScore,
         initialAnswer != .data$adviceSide & !.data$switch ~
-          .data$initialConfidence - .data$finalConfidence,
+          .data$initialConfidenceScore - .data$finalConfidenceScore,
         initialAnswer == .data$adviceSide & .data$switch ~
-          -(.data$finalConfidence + .data$initialConfidence)
+          -(.data$finalConfidenceScore + .data$initialConfidenceScore)
       ),
-      .max = 50 - .data$initialConfidence,
+      .max = 1 - .data$initialConfidenceScore,
       adviceInfluenceCapped = if_else(abs(.data$adviceInfluence) > .data$.max,
                                       .data$.max * sign(.data$adviceInfluence),
                                       .data$adviceInfluence)

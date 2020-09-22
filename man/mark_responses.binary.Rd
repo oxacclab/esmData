@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotate_responses.R
 \name{mark_responses.binary}
 \alias{mark_responses.binary}
-\title{Add variables indicating error, correctness, etc. for estimates}
+\title{Add variables indicating error, correctness, etc. for estimates.}
 \usage{
 mark_responses.binary(AdvisedTrial)
 }
@@ -11,8 +11,11 @@ mark_responses.binary(AdvisedTrial)
 advice}
 }
 \value{
-\code{AdvisedTrial} with correct columns for initial estimate, final decision, and any advisory estimates
+\code{AdvisedTrial} with confidenceScore and correct columns for initial estimate, final decision, and any advisory estimates
 }
 \description{
-Add variables indicating error, correctness, etc. for estimates
+Add variables indicating error, correctness, etc. for estimates.
+}
+\details{
+confidenceScore is a confidence expressed as a proportion of maximum confidence
 }
