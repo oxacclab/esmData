@@ -34,9 +34,9 @@ library(rlang)
 
   print(fileDetails['url'])
   if (class('tbl') %in% class(fileDetails['url']))
-    csv <- fileDetails['url'] %>% read.csv() %>% as_tibble()
+    csv <- fileDetails['url'] %>% read.csv(encoding = 'utf8') %>% as_tibble()
   else
-    csv <- fileDetails %>% pull('url') %>% read.csv() %>% as_tibble()
+    csv <- fileDetails %>% pull('url') %>% read.csv(encoding = 'utf8') %>% as_tibble()
 
   if (str_detect(fileDetails['table'], 'Trial')) {
     if (!all(c('study', 'version') %in% names(fileDetails)))
@@ -57,11 +57,14 @@ library(rlang)
     }
     close(con)
 
+    print(list(jsons = jsons))
+
     # Fetch json files and extract matching Trial info
     d <- NULL
     attn <- unique(csv$isAttentionCheck)
 
     for (j in jsons) {
+      print(paste0('Fetching ', j))
       con <- curl(j)
       open(con, "rb")
       txt <- readLines(con)
@@ -81,18 +84,23 @@ library(rlang)
     # Save name order for restoring later
     name_order <- names(csv)
     overwrite <- names(csv)[names(csv) %in% names(d)]
+    keep <- c('pid', 'timestampStart', names(csv)[!(names(csv) %in% overwrite)])
+
+    # Suppress multiple recordings of trials
+    d <- unique(d)
 
     if (!is.null(overwrite) && length(overwrite) > 0) {
       if (nrow(d) != nrow(csv)) {
+        print(paste0('Mismatched rows counts (d = ', nrow(d), ' vs csv =', nrow(csv), ')'))
         warning('Mismatched row counts for raw (JSON) and processed (CSV) data - skipping raw data overwrite.')
-      } else {
+      } #else {
         csv <- csv %>% arrange(timestampStart, pid)
         d <- d %>% arrange(timestampStart, pid)
 
-        csv <- csv[, !(names(csv) %in% overwrite)]
-        csv <- bind_cols(csv, d)
+        csv <- csv[, keep]
+        csv <- left_join(csv, d, by = names(d)[names(d) %in% names(csv)])
         csv <- csv %>% select(all_of(name_order))
-      }
+      #}
     }
   }
 
@@ -113,11 +121,12 @@ library(rlang)
 #' @param x tbl to retype
 #' @param name name of the tbl for finding the dictionary
 #' @param verbose print details about 'all' columns, only 'changes', or 'none'
+#' @param strEncoding string encoding to use for string variables, see \code{iconvlist()}
 #' @importFrom utils read.csv
 #' @importFrom stringr str_replace str_detect
 #' @importFrom dplyr filter %>% pull
 #' @return x with types matching those listed in its dictionary
-enforceTypes <- function(x, name, verbose = c('all')) {
+enforceTypes <- function(x, name, verbose = c('all'), strEncoding = 'utf8') {
   if (length(x) == 1 & is.null(names(x)))
       x <- x[[1]]
   # Find dictionary
@@ -145,16 +154,16 @@ enforceTypes <- function(x, name, verbose = c('all')) {
                    str_detect(dt, 'logic') ~ "logical",
                    str_detect(dt, '\\*') ~ "tibble",
                    T ~ NA_character_)
-    if (f == 'tibble') {
-      if ('changes' %in% verbose | 'all' %in% verbose)
-        print(paste0('Converting ', name, '$', printN, ' to ', f))
-      x <- x %>% mutate_at(n, as_tibble)
-      next()
-    }
     if (is.na(f)) {
       warning(paste0('Could not parse type "', dt, '" for ', name, '$', n, '.'))
       next()
     } else {
+      if (f == 'tibble') {
+        if ('changes' %in% verbose | 'all' %in% verbose)
+          print(paste0('Converting ', name, '$', printN, ' to ', f))
+        x <- x %>% mutate_at(n, as_tibble)
+        next()
+      }
       if (do.call(paste0('is.', f), list(unlist(x[, n])))) {
         if ('all' %in% verbose)
           print(paste0(name, '$', printN, ' is already of type ', f))
@@ -167,9 +176,24 @@ enforceTypes <- function(x, name, verbose = c('all')) {
         error = function(e)
           warning(paste0('Could not convert ', name, '$', n, ' using ', f, '. Error:\n', e))
       )
+      if (f == 'character')
+        x[, n] <- reencodeString(x[, n], strEncoding)
     }
   }
   x
+}
+
+#' Convert a string to another encoding in a CRAN-happy way
+#' @param S character tbl vector
+#' @param encoding string encoding to convert to (see \code{iconvlist()})
+#' @return \code{S} re-encoded in \code{encoding}
+reencodeString <- function(S, encoding) {
+  v <- S[[1]]
+  Encoding(v) <- "latin1"
+  S[[1]] <- iconv(v, from = "latin1", to = encoding)
+  # Encoding(v) <- encoding
+  # S[[1]] <- iconv(v, from = encoding, to = "latin1")
+  S
 }
 
 # List server files -------------------------------------------------------
@@ -214,7 +238,7 @@ fetchRawData <- function(cores = parallel::detectCores() - 4) {
 
   if (cores > 1) {
     cl <- makeCluster(cores, outfile = 'I:/TMP/r-parallel.log')
-    clusterExport(cl, c('.fetchData', 'enforceTypes'))
+    clusterExport(cl, c('.fetchData', 'enforceTypes', 'reencodeString'))
     x$data <- parApply(cl, x, 1, .fetchData)
     y$data <- parApply(cl, y, 1, .fetchData)
     stopCluster(cl)
@@ -527,7 +551,8 @@ getDictionaries.dates <- function() {
       csv = map(
         url,
         ~ read.csv(., header = F) %>%
-          as_tibble()
+          as_tibble() %>%
+          mutate(V3 = reencodeString(V3, 'utf8'))
       ),
       json = map(.data$csv, dictToJSON)
     ) %>% select(.data$name, .data$json)

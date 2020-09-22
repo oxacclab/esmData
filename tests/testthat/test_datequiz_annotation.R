@@ -10,6 +10,11 @@ at <-  filter(AdvisedTrial,
                 !(.data$studyId == 'minGroups' & .data$studyVersion == '1.2.0'))
 x <- annotate_responses(at)
 
+at %>%
+  group_by(timestampStart, pid, studyId, studyVersion) %>%
+  summarise(n = n()) %>% filter(n > 1) %>%
+  mutate(time = timestampStart - 1.558786e12)
+
 test_that("annotate_responses completes", {
   expect_equal('tbl' %in% class(x), T)
 })

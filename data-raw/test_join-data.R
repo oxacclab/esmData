@@ -32,8 +32,9 @@ test_that("fetchRawData fragment loads data", {
     set_names(c('url', 'study', 'version', 'table'))
 
 
-  x <- files %>% filter(str_detect(table, '^practiceAdvisedTrial$'))
+  x <- files %>% filter(str_detect(table, '^AdvisedTrial$')) %>% .[1:5, ]
   # x$data <- apply(x, 1, .fetchData)
+  # addLabels(x)
 
   cl <- makeCluster(detectCores() - 2, outfile = logfile)
   clusterExport(cl, c('.fetchData', 'enforceTypes'))

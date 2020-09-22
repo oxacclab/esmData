@@ -199,7 +199,8 @@ getDictionaries.dots <- function() {
       csv = map(
         url,
         ~ read.csv(., header = F) %>%
-          as_tibble()
+          as_tibble() %>%
+          mutate(V3 = reencodeString(V3, 'utf8'))
       ),
       json = map(.data$csv, dictToJSON)
     ) %>% select(.data$name, .data$json)
