@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "blocks","int","Number of blocks, including training and practice"
 "clientTime","int","Timestamp of the request to write this CSV line, according to the participant's computer"
 "condition","int","Experimental condition to which the participant has been assigned"

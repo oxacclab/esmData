@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "clientTime","int","Timestamp of the request to write this CSV line, according to the participant's computer"
 "comment","string","Participant's answer to the open debrief question"
 "group","int","Participant's response to the question asking which group they were in. For participants paying attention, will match the pGroup variable in study details."

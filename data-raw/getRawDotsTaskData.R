@@ -190,6 +190,8 @@ tagData.dots <- function(files) {
 #' @importFrom tibble tibble
 #' @importFrom dplyr %>% mutate select
 #' @importFrom rlang .data
+#' @importFrom readr read_csv
+#' @importFrom stringi stri_enc_toascii
 #' @importFrom purrr map
 getDictionaries.dots <- function() {
   dicts <- tibble(name = c('advisors', 'debrief', 'genTrustQ', 'participants', 'questionnaires', 'trials'))
@@ -198,9 +200,9 @@ getDictionaries.dots <- function() {
       url = paste0('http://localhost/ExploringSocialMetacognition/analysis/dictionary_', .data$name, '.csv'),
       csv = map(
         url,
-        ~ read.csv(., header = F) %>%
+        ~ suppressMessages({read_csv(., col_names = F)}) %>%
           as_tibble() %>%
-          mutate(V3 = reencodeString(V3, 'utf8'))
+          mutate(X3 = stri_enc_toascii(X3))
       ),
       json = map(.data$csv, dictToJSON)
     ) %>% select(.data$name, .data$json)

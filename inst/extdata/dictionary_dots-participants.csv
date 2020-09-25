@@ -1,27 +1,27 @@
 "name","value","description"
 "blockCount","int","The number of advisor pairings experienced by the participant"
-"catchPerBlock","*","Block structure of the first subblock in a block. Structure values list numbers of
-0.	Catch trials
-1.	Force trials
+"catchPerBlock","*","Block structure of the first subblock in a block. Structure values list numbers of
+0.	Catch trials
+1.	Force trials
 2.	Choice trials"
 "changeDuration","int","The duration of the change advisor screen during which the participant can request an alternate advisor by pressing a button."
 "choicePerBlock","*","The number of choice trials in each block of the main experiment."
-"debriefComments","string","Participant’s response to being asked for final questions or comments on the experiment. This may be redacted if required for preserving participant data security"
-"difficultyStep","*","List detailing the staircasing information
-•	start: starting stepsize
-•	end: minimum stepsize
-•	nReversals: number of reversals before decrementing stepsize
-•	current: tracker for current stepsize
-•	currentReversals: tracker for reversals"
+"debriefComments","string","Participants response to being asked for final questions or comments on the experiment. This may be redacted if required for preserving participant data security"
+"difficultyStep","*","List detailing the staircasing information
+	start: starting stepsize
+	end: minimum stepsize
+	nReversals: number of reversals before decrementing stepsize
+	current: tracker for current stepsize
+	currentReversals: tracker for reversals"
 "dotCount","int","The starting number of dots in each box before the dotDifference is applied"
 "excluded","string","Whether the participant was excluded from further data analysis. Contains either FALSE (not excluded) or a reason for exclusion"
 "experimentDuration","int","Duration of the experiment (ms)"
 "feedbackCondition","bool","Whether or not the participant receives feedback at specific stages of the experiment"
 "feedbackDuration","int","Time feedback screen is visible for trials with feedback (ms)"
 "forcePerBlock","*","Block structure of the second subblock in a block"
-"id","string","The identification code for the participant. Where the participant comes from Prolific this is the sha1 hash of their Prolific ID. Where they do not, this is the sha1 hash of their starting timestamp plus a random decimal portion.
+"id","string","The identification code for the participant. Where the participant comes from Prolific this is the sha1 hash of their Prolific ID. Where they do not, this is the sha1 hash of their starting timestamp plus a random decimal portion.
 This corresponds to participantId in other data frames"
-"manipulationQuestion","string","Participant’s response to the question of what the difference between the advisors was. This may be redacted if required for preserving participant data security"
+"manipulationQuestion","string","Participants response to the question of what the difference between the advisors was. This may be redacted if required for preserving participant data security"
 "pid","int","A shorthand integer used for identifying a particular participant"
 "practiceBlockCount","int","Number of practice blocks"
 "practiceBlockLength","int","Number of trials in the practice block. This is in addition to the training trials"

@@ -4,6 +4,7 @@ library(utils)
 library(rlang)
 library(tibble)
 library(stringr)
+library(stringi)
 library(dplyr)
 library(parallel)
 library(sjlabelled)
@@ -19,24 +20,27 @@ library(rlang)
 #' @importFrom tibble as_tibble
 #' @importFrom dplyr %>% mutate_if filter bind_rows bind_cols select arrange
 #' @importFrom stringr str_extract str_detect
-#' @importFrom utils read.csv
+#' @importFrom readr read_csv
 #' @importFrom rlang .data
 #' @return tibble of parsed data
 .fetchData <- function(fileDetails) {
   library(curl)
   library(tibble)
   library(stringr)
+  library(stringi)
   library(dplyr)
-  library(utils)
+  library(readr)
   library(rlang)
   if (!all(c('url', 'table') %in% names(fileDetails)))
     stop('fileDetails variable missing required field. (Required fields = url, table.)')
 
   print(fileDetails['url'])
-  if (class('tbl') %in% class(fileDetails['url']))
-    csv <- fileDetails['url'] %>% read.csv(encoding = 'utf8') %>% as_tibble()
-  else
-    csv <- fileDetails %>% pull('url') %>% read.csv(encoding = 'utf8') %>% as_tibble()
+  suppressMessages({
+    if (class('tbl') %in% class(fileDetails['url']))
+      csv <- fileDetails['url'] %>% read_csv() %>% as_tibble()
+    else
+      csv <- fileDetails %>% pull('url') %>% read_csv() %>% as_tibble()
+  })
 
   if (str_detect(fileDetails['table'], 'Trial')) {
     if (!all(c('study', 'version') %in% names(fileDetails)))
@@ -122,11 +126,12 @@ library(rlang)
 #' @param name name of the tbl for finding the dictionary
 #' @param verbose print details about 'all' columns, only 'changes', or 'none'
 #' @param strEncoding string encoding to use for string variables, see \code{iconvlist()}
-#' @importFrom utils read.csv
+#' @importFrom readr read_csv
 #' @importFrom stringr str_replace str_detect
+#' @importFrom stringi stri_enc_toascii stri_trans_general
 #' @importFrom dplyr filter %>% pull
 #' @return x with types matching those listed in its dictionary
-enforceTypes <- function(x, name, verbose = c('all'), strEncoding = 'utf8') {
+enforceTypes <- function(x, name, verbose = c('all')) {
   if (length(x) == 1 & is.null(names(x)))
       x <- x[[1]]
   # Find dictionary
@@ -135,7 +140,7 @@ enforceTypes <- function(x, name, verbose = c('all'), strEncoding = 'utf8') {
     warning(paste0('No dictionary found at ', path, '.'))
     return(x)
   }
-  d <- read.csv(path)
+  d <- suppressMessages({read_csv(path)})
   # Update types
   for (n in names(x)) {
     dn <- str_replace(n, 'advisor[0-9]+', 'advisor[0-9]+')
@@ -177,23 +182,11 @@ enforceTypes <- function(x, name, verbose = c('all'), strEncoding = 'utf8') {
           warning(paste0('Could not convert ', name, '$', n, ' using ', f, '. Error:\n', e))
       )
       if (f == 'character')
-        x[, n] <- reencodeString(x[, n], strEncoding)
+        x[, n] <- x[, n] %>%
+          stri_enc_toascii()
     }
   }
   x
-}
-
-#' Convert a string to another encoding in a CRAN-happy way
-#' @param S character tbl vector
-#' @param encoding string encoding to convert to (see \code{iconvlist()})
-#' @return \code{S} re-encoded in \code{encoding}
-reencodeString <- function(S, encoding) {
-  v <- S[[1]]
-  Encoding(v) <- "latin1"
-  S[[1]] <- iconv(v, from = "latin1", to = encoding)
-  # Encoding(v) <- encoding
-  # S[[1]] <- iconv(v, from = encoding, to = "latin1")
-  S
 }
 
 # List server files -------------------------------------------------------
@@ -238,7 +231,7 @@ fetchRawData <- function(cores = parallel::detectCores() - 4) {
 
   if (cores > 1) {
     cl <- makeCluster(cores, outfile = 'I:/TMP/r-parallel.log')
-    clusterExport(cl, c('.fetchData', 'enforceTypes', 'reencodeString'))
+    clusterExport(cl, c('.fetchData', 'enforceTypes'))
     x$data <- parApply(cl, x, 1, .fetchData)
     y$data <- parApply(cl, y, 1, .fetchData)
     stopCluster(cl)
@@ -530,6 +523,7 @@ tagData <- function(files) {
 #' @importFrom dplyr mutate %>% select
 #' @importFrom purrr map
 #' @importFrom rlang .data
+#' @importFrom stringi stri_enc_toascii
 #' @return list of dictionaries in JSON format
 getDictionaries.dates <- function() {
   dicts <- tibble(name = c(
@@ -550,9 +544,9 @@ getDictionaries.dates <- function() {
       url = paste0('http://localhost/ExploringSocialMetacognition/data/public/dictionary_', .data$name, '.csv'),
       csv = map(
         url,
-        ~ read.csv(., header = F) %>%
+        ~ suppressMessages({read_csv(., col_names = F)}) %>%
           as_tibble() %>%
-          mutate(V3 = reencodeString(V3, 'utf8'))
+          mutate(X3 = stri_enc_toascii(stri_trans_general(X3, 'Latin-ASCII')))
       ),
       json = map(.data$csv, dictToJSON)
     ) %>% select(.data$name, .data$json)
@@ -566,7 +560,7 @@ getDictionaries.dates <- function() {
 #' @importFrom jsonlite toJSON
 dictToJSON <- function(dict) {
   # Correct names if they're missing
-  if (is.null(colnames(dict)) | has_name(dict, 'V1')) {
+  if (is.null(colnames(dict)) | has_name(dict, 'X1')) {
     if (ncol(dict) == 2)
       names(dict) <- c('name', 'description')
     else if (ncol(dict) == 3)
@@ -633,7 +627,7 @@ addLabels <- function(files, dictionaryPrefix = '') {
   }
   #' @importFrom sjlabelled set_label
   #' @importFrom stringr str_detect
-  #' @importFrom utils read.csv
+  #' @importFrom readr read_csv
   .addLabels <- function(f) {
     if (dictionaryPrefix != '' & !str_detect(dictionaryPrefix, '-$'))
       dictionaryPrefix <- paste0(dictionaryPrefix, '-')
@@ -642,7 +636,7 @@ addLabels <- function(files, dictionaryPrefix = '') {
       warning(paste0('No dictionary file found for ', f$table, ', missing ', dictPath, '.'))
       return(f$data)
     }
-    dict <- read.csv(dictPath)
+    dict <- suppressMessages({read_csv(dictPath)})
     for (n in names(f$data)) {
       d <- .getLabel(dict, n)
       if (!is.null(d))

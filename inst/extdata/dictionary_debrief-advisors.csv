@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "advisorId","int","ID of the advisor"
 "clientTime","int","Timestamp of the request to write this CSV line, according to the participant's computer"
 "comment","string|NA","Free response field for the participant to describe the advisor."

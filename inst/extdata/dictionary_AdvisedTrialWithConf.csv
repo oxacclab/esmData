@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "advisor[0-9]+","int","The position of the advisor in the advisor list for this trial, [0-9]+"
 "advisor[0-9]+actualType","string","Actual advice type offered by advisor [0-9]+ on this trial (the nominal type may not be possible to give)"
 "advisor[0-9]+actualTypeFlag","int","Binary flag representation of the above"

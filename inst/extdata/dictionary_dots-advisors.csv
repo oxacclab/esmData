@@ -1,15 +1,15 @@
 "name","value","description"
-"adviceType","int","This is the code for the agreement profile of the advisor. Values should be one of:
-1.	Agree-in-confidence
-2.	Agree-in-uncertainty
-3.	Extreme agree-in-confidence
-4.	Extreme agree-in-uncertainty
-5.	High accuracy
-6.	Low accuracy
-7.	High agreement
-8.	Low agreement
-9.	Consistent accuracy
-10.	Consistent agreement
+"adviceType","int","This is the code for the agreement profile of the advisor. Values should be one of:
+1.	Agree-in-confidence
+2.	Agree-in-uncertainty
+3.	Extreme agree-in-confidence
+4.	Extreme agree-in-uncertainty
+5.	High accuracy
+6.	Low accuracy
+7.	High agreement
+8.	Low agreement
+9.	Consistent accuracy
+10.	Consistent agreement
 Other: balanced (used for practice)"
 "advisorClass","string","The HTML/CSS class used to identify the advisor"
 "groupId","int","Id of the group to which the advisor belongs."

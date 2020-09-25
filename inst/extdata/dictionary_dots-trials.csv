@@ -3,7 +3,7 @@
 "adviceSide","int","Whether the advisor endorsed the left (0) or right (1) side. Basic value is overwritten by the R script and the raw value is stored as adviceSideOld because early version of the JavaScript code reported this incorrectly"
 "adviceSideOld","int","Archive of raw advisor endorsed-side variable from JavaScript"
 "adviceString","string","Text displayed to the participant indicating the side which was endorsed by the advisor"
-"adviceType","string","The advisor’s agreement profile"
+"adviceType","string","The advisors agreement profile"
 "advisor[0-9]+adviceSide","int","Which of the binary options is endorsed by the Nth advisor."
 "advisor[0-9]+adviceString","string","The text of the advice given by advisor N."
 "advisor[0-9]+agrees","bool","Whether advisor N agrees with the participant."
@@ -21,43 +21,43 @@
 "block","int","Block number (includes sub-blocks and practice blocks, so 2nd block 1st sub-block is block number 4 if there is one practice block and two sub-blocks per block)"
 "choice0","int","The advisorId of the advisor in the choice slot at the top of the screen"
 "choice1","int","The advisorId of the advisor in the choice slot at the bottom of the screen"
-"confidenceCategory","int","The category into which the participant’s confidence falls. This is calculated each trial by taking the participant’s confidence ratings so far and determining whether the current value falls into the
-0.	bottom 30%
-1.	middle 40%
+"confidenceCategory","int","The category into which the participants confidence falls. This is calculated each trial by taking the participants confidence ratings so far and determining whether the current value falls into the
+0.	bottom 30%
+1.	middle 40%
 2.	top 30%"
-"confidenceShift","int","The amount the participant’s confidence increased in their final response"
-"confidenceShiftRaw","int","The amount the participant’s confidence increased in their final response, capped by the magnitude of the largest possible positive increase"
-"correctAnswer","int","The box containing the most dots
-0.	left
+"confidenceShift","int","The amount the participants confidence increased in their final response"
+"confidenceShiftRaw","int","The amount the participants confidence increased in their final response, capped by the magnitude of the largest possible positive increase"
+"correctAnswer","int","The box containing the most dots
+0.	left
 1.	right"
 "defaultAdvisor","int","The default advisor offered for trials where participants have a default advisor and an option to switch to another."
 "dotDifference","int","The number of dots added to the more populated box and subtracted from the less populated box. The objective task difficulty"
 "durationAdviceDuration","int","Duration of the advice phase (ms)"
 "durationAdvisorChoice","int","Duration of the advisor choice phase (ms)"
 "feedback","bool","Whether the participant received feedback on their response"
-"finalAnswer","int","The participant’s final answer to which box contains the most dots
-0.	left
+"finalAnswer","int","The participants final answer to which box contains the most dots
+0.	left
 1.	right"
-"finalConfidence","int","The participant’s rating of their confidence in their final response [0-50]"
-"finalConfSpan","int","The participant’s final confidence coded on a [-50,50] scale where leftwards answers are [-50,-1] and rightward answers are [1,50]"
-"finalCorrect","bool","Whether the participant’s final response was correct"
+"finalConfidence","int","The participants rating of their confidence in their final response [0-50]"
+"finalConfSpan","int","The participants final confidence coded on a [-50,50] scale where leftwards answers are [-50,-1] and rightward answers are [1,50]"
+"finalCorrect","bool","Whether the participants final response was correct"
 "grid","string","Hash of the specific dot task grid displayed to the participant"
 "hasChoice","bool","Whether the trial offers a choice of advisor"
 "id","int","Trial number (sequential)"
-"influence","int","The amount the participant’s confidence changed towards the direction endorsed by the advisor"
-"initialAnswer","int","The participant’s initial answer to which box contains the most dots
-0.	left
+"influence","int","The amount the participants confidence changed towards the direction endorsed by the advisor"
+"initialAnswer","int","The participants initial answer to which box contains the most dots
+0.	left
 1.	right"
-"initialConfidence","int","The participant’s rating of their confidence in their first response [0-50]"
-"initialConfSpan","int","The participant’s initial confidence coded on a [-50,50] scale where leftwards answers are [-50,-1] and rightward answers are [1,50]"
-"initialCorrect","bool","Whether the participant’s initial response was correct"
+"initialConfidence","int","The participants rating of their confidence in their first response [0-50]"
+"initialConfSpan","int","The participants initial confidence coded on a [-50,50] scale where leftwards answers are [-50,-1] and rightward answers are [1,50]"
+"initialCorrect","bool","Whether the participants initial response was correct"
 "irrational","bool","Whether the influence on a trial is negative"
 "isRepeat","bool","Whether this trial's stimulus is a repeat of a previous stimulus"
 "isRepeated","bool","Whether a future trial reuses this trial's stimulus"
 "participantId","string","The identification code for the participant. Where the participant comes from Prolific this is the sha1 hash of their Prolific ID. Where they do not, this is the sha1 hash of their starting timestamp plus a random decimal portion"
 "pid","int","A shorthand integer used for identifying a particular participant"
 "practice","bool","Whether the trial is a practice trial"
-"rawInfluence","int","The amount the participant’s confidence changed towards the direction endorsed by the advisor using confidenceShiftRaw"
+"rawInfluence","int","The amount the participants confidence changed towards the direction endorsed by the advisor using confidenceShiftRaw"
 "repeatRejection","string","Reason this trial's stimulus was disqualified from being repeated."
 "stimulusParent","int","Id of the trial which originally used this trial's stimulus (isRepeat trials only)"
 "switch","bool","Whether the participant changed their response side in their final answer"

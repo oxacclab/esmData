@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "clientTime","int","Timestamp of the request to write this CSV line, according to the participant's computer"
 "confidence","int","The width of the advisor's marker"
 "confidenceAddition","int|NA","Amount of confidence added to the advisor's calculated confidence before capping"

@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "anchorDate","int|NA","Year given as the anchor"
 "anchorHTML","string|NA","HTML displayed in the anchor date area"
 "block","int","The number of the experimental block the trial is in"

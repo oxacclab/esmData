@@ -1,5 +1,5 @@
 "name","value","description"
-"﻿variable","type","description"
+"variable","type","description"
 "browser","string","Browser as identified by the user"
 "clientTime","int","Timestamp of the request to write this CSV line, according to the participant's computer"
 "device","string","Device as identified by the user"
