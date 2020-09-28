@@ -283,7 +283,8 @@ rate_influence.binary <- function(AdvisedTrial) {
 
   # Reshape to separate out advisors
   tmp <- AdvisedTrial %>%
-    rename_with(~ str_replace(., 'advisor([0-9]+)', 'x\\1'), .cols = matches('advisor[0-9]+$')) %>%
+    rename_with(~ str_replace(., 'advisor([0-9]+)', 'x\\1'),
+                .cols = matches('advisor[0-9]+$')) %>%
     pivot_longer(
       matches('^advisor[0-9]+'),
       names_to = c('advisor', '.value'),
@@ -293,13 +294,13 @@ rate_influence.binary <- function(AdvisedTrial) {
   # Calculate summary values by advisor
   tmp <- tmp %>%
     mutate(
-      .max = 100 - .data$responseConfidence,
+      .max = 100 - .data$responseConfidenceScore,
       .switch = .data$responseAnswerSide != .data$responseAnswerSideFinal,
       .agree = .data$responseAnswerSide == .data$adviceSide,
       EstimateIncrease = if_else(
         .data$.switch,
-        -(.data$responseConfidenceFinal + .data$responseConfidence),
-        .data$responseConfidenceFinal - .data$responseConfidence
+        -(.data$responseConfidenceScoreFinal + .data$responseConfidenceScore),
+        .data$responseConfidenceScoreFinal - .data$responseConfidenceScore
       ),
       Influence = case_when(
         .data$.agree ~ .data$EstimateIncrease,
