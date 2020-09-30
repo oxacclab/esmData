@@ -78,6 +78,8 @@ annotate_responses.AdvisedTrial.binary <- function(AdvisedTrial) {
 #' @param AdvisedTrial tbl of initial estimates and final decisions made with
 #'   advice
 #'
+#' @details confidenceScore is a confidence expressed as a proportion of maximum confidence
+#'
 #' @return \code{AdvisedTrial} with correct and error columns for initial estimate, final decision, and any advisory estimates
 #' @importFrom dplyr mutate %>% select matches rename_with left_join if_else
 #' @importFrom stringr str_replace str_c str_extract str_ends str_to_sentence
@@ -141,7 +143,24 @@ mark_responses <- function(AdvisedTrial) {
                 values_from = c(.data$Correct, .data$Error))
 
   # Join back onto the main tbl
-  left_join(AdvisedTrial, tmp, by = names(tmp)[names(tmp) %in% names(AdvisedTrial)])
+  tmp <- left_join(
+    AdvisedTrial,
+    tmp,
+    by = names(tmp)[names(tmp) %in% names(AdvisedTrial)]
+  )
+
+  tmp2 <- tmp %>%
+    mutate(
+      across(.cols = matches('[Cc]onfidence(Final)?$'), .fns = ~ . / 100)
+    ) %>%
+    rename_with(~str_replace(., '([Cc]onfidence)(Final)?$', '\\1Score\\2'))
+
+  # Add in confidenceScore
+  left_join(
+    tmp,
+    tmp2,
+    by = names(tmp2)[names(tmp2) %in% names(tmp)]
+  )
 }
 
 #' Add variables indicating error, correctness, etc. for estimates.
