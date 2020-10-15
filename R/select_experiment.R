@@ -4,7 +4,8 @@
 #'   specifying filter conditions
 #' @param envir environment to write to
 #' @importFrom tibble as_tibble tibble
-#' @importFrom dplyr %>% bind_rows across summarise select
+#' @importFrom dplyr %>% bind_rows across summarise select everything
+#' @importFrom rlang has_name .data
 #' @export
 select_experiment <- function(project, f = function(x) dplyr::filter(x), envir = .GlobalEnv) {
   .fEnv <- new.env()
@@ -29,7 +30,20 @@ select_experiment <- function(project, f = function(x) dplyr::filter(x), envir =
     if (n %in% ls(envir = envir)) {
       # Try to merge dataframes
       tryCatch({
-        assign(n, bind_rows(get(n, envir = envir), D$data[[i]]), envir = envir)
+        x <- D$data[[i]]
+        # Ensure study id and version are recorded
+        if (!has_name(x, 'studyId'))
+          x$studyId <- D$study[i]
+        if (!has_name(x, 'studyVersion'))
+          x$studyVersion <- D$version[i]
+        x <- select(
+          x,
+          matches('^p?id$'),
+          .data$studyId,
+          .data$studyVersion,
+          everything()
+        )
+        assign(n, bind_rows(get(n, envir = envir), x), envir = envir)
       }, error = function(e) {
         warning(paste0('Unable to automatically join rows for "',
                        n, '" (', D$study[i], ' ', D$version[i], ').\n',

@@ -11,3 +11,8 @@ test_that("select_experiments filters correctly", {
   select_experiment('dotstask', f = function(x) dplyr::filter(x, study == 'Accuracy'), envir = .tEnv2)
   expect_equal(nrow(dotstask) == nrow(.tEnv2$dotstask), F)
 })
+
+test_that("studyId field added", {
+  select_experiment('dotstask')
+  expect_equal(all(c('studyId', 'studyVersion') %in% names(trials)), T)
+})
