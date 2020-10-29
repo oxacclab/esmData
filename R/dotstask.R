@@ -1,3 +1,5 @@
+#' Data from the Exploring Social Metacognition Dots Task
+#'
 #' Data collected from a series of behavioural psychological experiments in
 #' which participants view two boxes containing around 200 dots each and make a
 #' decision as to whether the left or the right box contains more dots. On most

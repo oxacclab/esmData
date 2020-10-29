@@ -3,9 +3,7 @@
 \docType{data}
 \name{datequiz}
 \alias{datequiz}
-\title{Data collected from a series of behavioural psychological experiments in
-which participants made estimates about when events occurred and then updated
-those estimates based on advice.}
+\title{Data from the Exploring Social Metacognition Dates Task}
 \format{
 A tibble with 478 rows and 14 variables: \describe{
   \item{url}{URL of the study
@@ -42,6 +40,11 @@ A tibble with 478 rows and 14 variables: \describe{
 datequiz
 }
 \description{
+Data collected from a series of behavioural psychological experiments in
+which participants made estimates about when events occurred and then updated
+those estimates based on advice.
+}
+\details{
 The task has two versions, a continuous (timeline) version and a binary
 version. In the timeline version, participants place markers of various
 widths on a timeline stretching from 1890 to 2010 to identify when a series
@@ -51,8 +54,7 @@ markers are worth more points) on the timeline to indicate their initial
 estimate of when the event occurred, before seeing a marker placed by an
 advisor and getting the opportunity to alter their original marker's position
 in making their final decision.
-}
-\details{
+
 In the binary version of the task, participants have two vertical bars, one
 on the left of the screen labelled 'before', and one on the right labelled
 'after'. Participants see an event at the top of the screen alongside an

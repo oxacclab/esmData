@@ -3,13 +3,7 @@
 \docType{data}
 \name{dotstask}
 \alias{dotstask}
-\title{Data collected from a series of behavioural psychological experiments in
-which participants view two boxes containing around 200 dots each and make a
-decision as to whether the left or the right box contains more dots. On most
-trials, participants receive advice from an advisor and make a final
-decision. Both the initial and final decision are made on a horizontal bar
-with the extremes representing certainty that the box on that side had the
-most dots, and the middle region representing relative uncertainty.}
+\title{Data from the Exploring Social Metacognition Dots Task}
 \format{
 A tibble with 80 rows and 14 variables: \describe{
   \item{folderName}{the original source of the data - should eventually point to the OSF repository for the data}
@@ -35,6 +29,15 @@ A tibble with 80 rows and 14 variables: \describe{
 dotstask
 }
 \description{
+Data collected from a series of behavioural psychological experiments in
+which participants view two boxes containing around 200 dots each and make a
+decision as to whether the left or the right box contains more dots. On most
+trials, participants receive advice from an advisor and make a final
+decision. Both the initial and final decision are made on a horizontal bar
+with the extremes representing certainty that the box on that side had the
+most dots, and the middle region representing relative uncertainty.
+}
+\details{
 This dataset contains many experiments on this theme, as well as metadata
 which provides basic information about each individual study.
 }

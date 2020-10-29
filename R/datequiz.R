@@ -1,3 +1,5 @@
+#' Data from the Exploring Social Metacognition Dates Task
+#'
 #' Data collected from a series of behavioural psychological experiments in
 #' which participants made estimates about when events occurred and then updated
 #' those estimates based on advice.
