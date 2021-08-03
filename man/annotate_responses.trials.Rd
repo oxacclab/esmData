@@ -4,11 +4,13 @@
 \alias{annotate_responses.trials}
 \title{Add variables assessing the correctness, influence etc. of estimates}
 \usage{
-annotate_responses.trials(trials)
+annotate_responses.trials(trials, max_conf = 50)
 }
 \arguments{
 \item{trials}{tbl of initial estimates and final decisions made with
 advice in the dots task}
+
+\item{max_conf}{maximum confidence rating on the scale}
 }
 \value{
 \code{AdvisedTrial} with variables:

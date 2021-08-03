@@ -4,11 +4,13 @@
 \alias{annotate_responses}
 \title{Add variables assessing the correctness, influence etc. of estimates}
 \usage{
-annotate_responses(X)
+annotate_responses(X, ...)
 }
 \arguments{
 \item{X}{tbl of initial estimates and final decisions made with
 advice}
+
+\item{...}{passed on to the relevant annotate_responses subfunction}
 }
 \value{
 \code{X} with variables (*=binary only, ^=continuous only):

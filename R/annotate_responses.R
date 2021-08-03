@@ -1,6 +1,7 @@
 #' Add variables assessing the correctness, influence etc. of estimates
 #' @param X tbl of initial estimates and final decisions made with
 #'   advice
+#' @param ... passed on to the relevant annotate_responses subfunction
 #'
 #' @return \code{X} with variables (*=binary only, ^=continuous only):
 #'
@@ -15,19 +16,19 @@
 #' }
 #'
 #' @export
-annotate_responses <- function(X) {
+annotate_responses <- function(X, ...) {
   changed <- F
   # Detect which kind of data we have using some heuristics
   if ('responseEstimateLeft' %in% names(X)) {
-    X <- annotate_responses.AdvisedTrial(X)
+    X <- annotate_responses.AdvisedTrial(X, ...)
     changed <- T
   }
   if ('responseAnswerSide' %in% names(X)) {
-    X <- annotate_responses.AdvisedTrial.binary(X)
+    X <- annotate_responses.AdvisedTrial.binary(X, ...)
     changed <- T
   }
   if ('initialAnswer' %in% names(X)) {
-      X <- annotate_responses.trials(X)
+      X <- annotate_responses.trials(X, ...)
       changed <- T
   }
 
@@ -326,6 +327,7 @@ rate_influence.binary <- function(AdvisedTrial) {
 #' Add variables assessing the correctness, influence etc. of estimates
 #' @param trials tbl of initial estimates and final decisions made with
 #'  advice in the dots task
+#' @param max_conf maximum confidence rating on the scale
 #' @return \code{AdvisedTrial} with variables:
 #'
 #' \itemize{
@@ -337,8 +339,7 @@ rate_influence.binary <- function(AdvisedTrial) {
 #'
 #' @importFrom rlang .data
 #' @importFrom dplyr mutate %>% if_else case_when select starts_with
-annotate_responses.trials <- function(trials) {
-  max_conf <- 50
+annotate_responses.trials <- function(trials, max_conf = 50) {
   trials %>%
     # mark responses
     mutate(
