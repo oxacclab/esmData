@@ -1,7 +1,8 @@
 Package: esmData
 Type: Package
 Title: Exploring Social Metacognition Data
-Version: 0.1.5
+Version: 1.0.0
+Date: 2021-10-01
 Author: Matt Jaquiery
 Maintainer: Matt Jaquiery <matt.jaquiery@psy.ox.ac.uk>
 Description: Provides data collected during Matt Jaquiery's DPhil project 
@@ -9,6 +10,7 @@ Description: Provides data collected during Matt Jaquiery's DPhil project
     The data contain nested dataframes, so inspecting them via print() will 
     cause hanging behaviour. For best results, load data as a tibble manually
     or use this packages tada() function.
+URL: https://github.com/oxacclab/esmData/    
 License: CC BY 4.0
 Encoding: UTF-8
 LazyData: true
