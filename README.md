@@ -3,9 +3,10 @@
 
 <!-- badges: start -->
 ![R-CMD-check](https://github.com/oxacclab/esmData/workflows/R-CMD-check/badge.svg)
+[![DOI](https://zenodo.org/badge/279848253.svg)](https://zenodo.org/badge/latestdoi/279848253)
 <!-- badges: end -->
 
-The esmData package holds data used in Matt Jaquiery's Exploring Social Metacognition thesis.
+The esmData package holds data used in the [Exploring Social Metacognition](https://github.com/mjaquiery/oxforddown) DPhil thesis.
 The data is de-identified and documented.
 It is not necessarily expected that anyone will want to play around with these data, or even assess the computational reproducibility of the thesis, but the package helps in streamlining the thesis files and allows alternative uses if they are wanted.
 
@@ -40,3 +41,5 @@ select_experiment(
   f = function(x) filter(x, study == 'accuracyDates', manipulationOK)
 )
 ```
+
+_Note_: This package loads data using side-effects, so calling `select_experiment` multiple times in a script without clearing out the old workspace objects it creates is likely to produce unintended consequences and may cause errors.
